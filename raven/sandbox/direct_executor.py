@@ -25,6 +25,15 @@ _ENV_ALLOWLIST = (
     "SSL_CERT_FILE", "SSL_CERT_DIR", "REQUESTS_CA_BUNDLE",
     "HTTP_PROXY", "HTTPS_PROXY", "NO_PROXY",
     "http_proxy", "https_proxy", "no_proxy",
+    # Windows OS basics: absent on POSIX (filtered out by _baseline_env), but
+    # required on Windows for cmd.exe/PowerShell and any spawned tool to
+    # resolve temp dirs, the user profile, and system DLLs. Omitting these
+    # leaves the child with no SystemRoot/TEMP/etc. (temp files land in cwd,
+    # SSL/winsock/.NET tools fail). None are crown-jewel secrets.
+    "SystemRoot", "SystemDrive", "windir", "COMSPEC", "ComSpec", "PATHEXT",
+    "TEMP", "TMP", "USERPROFILE", "HOMEDRIVE", "HOMEPATH",
+    "APPDATA", "LOCALAPPDATA", "PROGRAMDATA", "PROGRAMFILES",
+    "NUMBER_OF_PROCESSORS", "PROCESSOR_ARCHITECTURE", "USERNAME", "USERDOMAIN",
 )
 
 
