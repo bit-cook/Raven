@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 import json
 import re
-import sys
 import weakref
 from contextlib import contextmanager
 from datetime import datetime
@@ -757,18 +756,13 @@ class MemoryStore:
         yield from self._fcntl_locked(self.stance_log_lock_path)
 
     def _fcntl_locked(self, lock_path: Path) -> Iterator[None]:
-        if sys.platform == "win32":
+        # Cross-platform advisory lock (portalocker): real serialization on
+        # Windows too, instead of the previous win32 no-op that lost concurrent
+        # writes to MEMORY.md / attention.md / behaviors.md / stance_log.json.
+        from raven.utils.portable_lock import file_lock
+
+        with file_lock(lock_path):
             yield
-            return
-        # `import` here so non-POSIX import doesn't fail at module load
-        import fcntl
-        lock_path.parent.mkdir(parents=True, exist_ok=True)
-        with lock_path.open("a") as fh:
-            fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
-            try:
-                yield
-            finally:
-                fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
 
     def read_long_term(self) -> str:
         if self.memory_file.exists():
